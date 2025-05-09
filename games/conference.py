@@ -9,6 +9,8 @@ from top import OS3EWeightedGraph
 from .abstract_game import AbstractGame
 import time
 import os
+import subprocess
+
 class MuZeroConfig:
     def __init__(self):
         # fmt: off
@@ -330,9 +332,25 @@ import time
         observation = observation[:, :, np.newaxis]
         return observation
 """
+class DevOpsPipeline:
+    def __init__(self):
+        self.configurations = []
+
+    def deploy_configuration(self, action):
+        # Logique pour déployer la configuration en fonction de l'action
+        print(f"Déploiement de la configuration pour l'action : {action}")
+        # Ajout de l'action à la liste des configurations (exemple)
+        self.configurations.append(action)
+
+# Créez une instance de ce pipeline
+devops_pipeline = DevOpsPipeline()
+
+
+
 class Game(AbstractGame):
     def __init__(self, seed=None):
         self.graph = OS3EWeightedGraph()
+        self.devops_pipeline = devops_pipeline
         self.latency_target = 0.9
         self.latency_measure = self.calculate_latency()
         self.winning_controllers = []
@@ -341,7 +359,6 @@ class Game(AbstractGame):
         self.current_players = list(range(len(self.graph.nodes())))
         self.reward_curve = []
         self.latency_reward_trace = []  # Liste pour stocker (latency, reward) de chaque action testée
-
 
     def step(self, actions):
         start_time = time.time()
@@ -387,9 +404,14 @@ class Game(AbstractGame):
             best_action_for_node = max(results_for_node, key=lambda x: x[1])
             print(f"(SelfPlay pid=2136) Best action for node {node_name}: {best_action_for_node}")
 
+            # Mettre à jour l'état du réseau avec l'action choisie
             self.graph.nodes[node]["active"] = 1 - current_status
             self.graph.nodes[node]["value"] = 1 - current_status
             self.update_state(best_action_for_node[0])
+
+            # Appel du déploiement ici
+            print(f"(SelfPlay) Deploying action for node {node_name}: {best_action_for_node[0]}")
+            self.devops_pipeline.deploy_configuration(best_action_for_node[0])
 
         final_latency_measure = self.calculate_latency()
         reward = self.calculate_reward(final_latency_measure)
@@ -410,7 +432,6 @@ class Game(AbstractGame):
         print(f"(SelfPlay) Étape {len(self.reward_curve)} - Récompense : {reward}")
 
         return self.get_observation(), reward, done
-
     def save_results(self, runtime):
         results_muzero = {
             "final_latency": self.calculate_latency(),

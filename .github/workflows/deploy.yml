@@ -1,0 +1,28 @@
+name: CI/CD Pipeline - Déploiement SDN
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le pipeline lors d'un push sur la branche 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Utilise une machine Ubuntu pour exécuter l'action
+    
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v2  # Récupère le code source du dépôt
+
+      - name: Installer Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Installe Python version 3.x
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Installe les dépendances de ton projet (si nécessaire)
+
+      - name: Exécuter le script de déploiement
+        run: |
+          python deploy_script.py  # Exécute ton script de déploiement
