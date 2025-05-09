@@ -332,6 +332,12 @@ import time
         observation = observation[:, :, np.newaxis]
         return observation
 """
+import time
+import os
+import numpy as np
+from collections import deque
+import networkx as nx
+
 class DevOpsPipeline:
     def __init__(self):
         self.configurations = []
@@ -344,8 +350,6 @@ class DevOpsPipeline:
 
 # Créez une instance de ce pipeline
 devops_pipeline = DevOpsPipeline()
-
-
 
 class Game(AbstractGame):
     def __init__(self, seed=None):
@@ -431,7 +435,22 @@ class Game(AbstractGame):
 
         print(f"(SelfPlay) Étape {len(self.reward_curve)} - Récompense : {reward}")
 
+        # Sauvegarder les emplacements optimisés dans un fichier
+        self.save_optimized_locations(winning_controllers)
+
         return self.get_observation(), reward, done
+
+    def save_optimized_locations(self, winning_controllers):
+        # Sauvegarder les emplacements optimisés dans un fichier
+        optimized_locations = [self.graph.nodes[node].get("label", f"Node {node}") for node in winning_controllers]
+        file_path = "optimized_locations.json"
+        
+        with open(file_path, 'w') as file:
+            for location in optimized_locations:
+                file.write(f"{location}\n")
+        
+        print(f"✅ Emplacements optimisés sauvegardés dans '{file_path}'")
+
     def save_results(self, runtime):
         results_muzero = {
             "final_latency": self.calculate_latency(),
@@ -441,7 +460,6 @@ class Game(AbstractGame):
             "runtime": runtime,
             "reward_curve": self.reward_curve,
             "latency_reward_trace": self.latency_reward_trace,
-
         }
 
         if os.path.exists("results_muzero.npy"):
@@ -491,12 +509,9 @@ class Game(AbstractGame):
         latency_difference = self.latency_measure - new_latency_measure
         print(f"latency_difference: {latency_difference}")  # Vérifier la différence
 
-        #reward_scale = 1e3  # Ajustez le facteur d'échelle selon les résultats
-
         # Calcul de la récompense
-        #reward = max(0, latency_difference / reward_scale)
-        reward=10
-        reward*=2
+        reward = 10
+        reward *= 2
         print(f"Calculated reward: {reward}")  # Vérifier la récompense
 
         return reward
@@ -552,4 +567,3 @@ class Game(AbstractGame):
         observation = np.array([[float(node_to_index[node]), float(self.latency_measure)] for node in nodes_list])
         observation = observation[:, :, np.newaxis]
         return observation
-
